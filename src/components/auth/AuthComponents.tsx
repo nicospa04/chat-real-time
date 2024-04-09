@@ -6,7 +6,7 @@ import { InputComp } from "../ui/InputComp"
 import { ButtonComp } from "../ui/ButtonComp"
 import { AuthSocialButton } from "./AuthSocialButton"
 import { BsGithub, BsGoogle } from "react-icons/bs"
-
+import axios from "axios"
 
 type Varient = 'LOGIN' | 'REGISTER'
 
@@ -32,11 +32,14 @@ export const AuthComponents = () => {
     }
   });
 
-  const onSubmit = (data:FieldValues) => {
+  const onSubmit =  (data:FieldValues) => {
     setIsLoading(true)
     setError('')
     if(variant === 'REGISTER'){
-      
+     const response =   axios.post('/api/register',data)
+     .then(res => res.status)
+     console.log(data)
+     
     }
 
     if(variant === 'LOGIN'){
