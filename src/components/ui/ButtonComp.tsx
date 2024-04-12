@@ -10,9 +10,10 @@ interface Props{
     secondary?: boolean;
     danger?: boolean;
     disabled?: boolean;
+    checked?: boolean;
 }
 
-export const ButtonComp = ({type = 'button', fullWidth,children,onClick,secondary,danger,disabled=false} : Props) => {
+export const ButtonComp = ({checked = false, type = 'button', fullWidth,children,onClick,secondary,danger,disabled=false} : Props) => {
   return (
 
     <button 
@@ -26,7 +27,7 @@ export const ButtonComp = ({type = 'button', fullWidth,children,onClick,secondar
             'text-white' : !secondary,
             'bg-rose-500 hover:bg-rose-600 focus-visible:outline-rose-600' : danger,
             'bg-sky-500 hover:bg-sky-600 focus-visible:outline-sky-600': !secondary && !danger,
-
+            'bg-green-500':checked
         })}    
     >
         {children}

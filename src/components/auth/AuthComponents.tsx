@@ -1,21 +1,34 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { FieldValues, useForm } from "react-hook-form"
 import { InputComp } from "../ui/InputComp"
 import { ButtonComp } from "../ui/ButtonComp"
 import { AuthSocialButton } from "./AuthSocialButton"
 import { BsGithub, BsGoogle } from "react-icons/bs"
 import axios from "axios"
+import toast from "react-hot-toast"
+import { signIn, useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
 
 type Varient = 'LOGIN' | 'REGISTER'
 
 
 export const AuthComponents = () => {
   
+  const session = useSession()
+  const router = useRouter()
+
+  useEffect(() => {
+    if(session?.status === 'authenticated'){
+      router.push('users')
+    }
+  }, [session?.status,router])
+
   const [variant,setVariant] = useState<Varient>('LOGIN')
   const [isLoading,setIsLoading] = useState(false)
   const [error,setError] = useState('')
+  const [registerCompleted,setRegisterCompleted] = useState(false)
 
   const toggleVarient = useCallback(() => {
     setVariant(variant === 'LOGIN' ? 'REGISTER' : 'LOGIN')
@@ -32,24 +45,61 @@ export const AuthComponents = () => {
     }
   });
 
-  const onSubmit =  (data:FieldValues) => {
+  const onSubmit =  async (data:FieldValues) => {
     setIsLoading(true)
     setError('')
     if(variant === 'REGISTER'){
-     const response =   axios.post('/api/register',data)
-     .then(res => res.status)
-     console.log(data)
+     const response =  await axios.post('/api/register',data)
+      .then(() => signIn('credentials', data))
+     .catch(() => toast.error('Something went wrong'))
+     .finally(() => setIsLoading(false))
+      
+     if(response === 'Account created successfully') setRegisterCompleted(true)
+
+
      
     }
 
     if(variant === 'LOGIN'){
+      console.log(data)
+      signIn('credentials', {
+        ...data,
+        redirect: false
+      })
+      .then((callback) => {
 
+        if(callback?.error){
+          toast.error(callback.error)
+        }
+
+        if(callback?.ok){
+         toast.success('Logged in successfully')
+         router.push('/users')
+        }
+        setIsLoading(false)
+        
+      })
     }
 }
 
 
 const socialAction = (action:string) => {
   setIsLoading(true)
+
+  signIn(action, {
+    redirect: false
+  })
+  .then((callback) => {
+    console.log(callback)
+    if(callback?.error){
+      toast.error('Invalid Credentials')
+    }
+
+    if(callback?.ok) {
+      toast.success('Logged in successfully')
+    }
+  })
+  .finally(() => setIsLoading(false))
 }
 
   return (
@@ -64,6 +114,7 @@ const socialAction = (action:string) => {
                     <InputComp label="Password" register={register} id="password" type="password" errors={errors}/>
                     <ButtonComp fullWidth type="submit" disabled={isLoading}>
                       {variant === 'LOGIN' ? 'Sign In' : 'Register'} </ButtonComp>
+                      <p className="text-red-500 w-full flex justify-center">{error}</p>
                   </form>
                 )
               }
@@ -74,8 +125,9 @@ const socialAction = (action:string) => {
                     <InputComp label="Name" register={register} id="name" errors={errors}/>
                     <InputComp label="Email" register={register} id="email" type="email" errors={errors}/>
                     <InputComp label="Password" register={register} id="password" type="password" errors={errors}/>
-                    <ButtonComp fullWidth type="submit" disabled={isLoading}>
+                    <ButtonComp fullWidth type="submit" disabled={isLoading} checked={registerCompleted}>
                       {variant === 'REGISTER' ? 'Register' : 'Sign In'} </ButtonComp>
+                      <p className="text-red-500 w-full flex justify-center">{error}</p>
                   </form>
                 )
               }

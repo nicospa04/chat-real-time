@@ -15,6 +15,9 @@ export async function POST(
     if(!email || !name || !password){
         return new NextResponse('Missing info', {status:400})
     }
+    if(password.length < 6){
+        return new NextResponse('Password must be at least 6 characters', {status:400})
+    }
 
     const hashedPassword = bcrypt.hashSync(password,10)
 
@@ -25,10 +28,10 @@ export async function POST(
     })
 
     if(user) {
-        return NextResponse.json({
-            error: 'User already exists',
-            status:400
-        })
+        return new NextResponse(
+            'User already exists',
+            {status:400}
+        )
     }
 
     console.log(email,password,name)
@@ -45,9 +48,8 @@ export async function POST(
     }
     catch(e) {
         console.log(e)
-        return NextResponse.json({
-            error: 'Something went wrong',
-            status:400
-        })
+        return new NextResponse('Something went wrong',
+            {status:400}
+        )
     }
 }
